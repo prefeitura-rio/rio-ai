@@ -25,3 +25,6 @@ dist-ssr
 
 # Virtual environment
 .venv/
+
+.env
+CLAUDE.md

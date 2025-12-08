@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rio-ai
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  selector:
+    matchLabels:
+      app: rio-ai
+  template:
+    metadata:
+      labels:
+        app: rio-ai
+    spec:
+      containers:
+        - name: rio-ai
+          image: ghcr.io/prefeitura-rio/rio-ai:latest
+          envFrom:
+            - secretRef:
+                name: rio-ai-secrets
+          env:
+            - name: NODE_ENV
+              value: "production"
+          ports:
+            - name: http
+              containerPort: 3001
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 6
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      restartPolicy: Always
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rio-ai-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: rio-ai
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: rio-ai
+  name: rio-ai
+spec:
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 3001
+  selector:
+    app: rio-ai
