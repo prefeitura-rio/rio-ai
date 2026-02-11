@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+@theme {
+  --color-rio-primary: #002B7F;
+  --color-rio-secondary: #00A859;
+  --color-rio-accent: #FFC72C;
+  --color-light-bg: #F8F9FA;
+  --color-prose: #212529;
+  --color-prose-light: #6C757D;
+
+  --font-sans: "Inter", sans-serif;
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  --animate-slide-in: slide-in 0.5s ease-out forwards;
+
+  @keyframes thinking-pulse {
+
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+
+  --animate-thinking-pulse: thinking-pulse 1.8s ease-in-out infinite;
+
+  /* Construction Banner Animations */
+  @keyframes backhoe-drive {
+    0% {
+      transform: translateX(-120px);
+    }
+
+    45% {
+      transform: translateX(120px);
+    }
+
+    50% {
+      transform: translateX(120px) scaleX(-1);
+    }
+
+    95% {
+      transform: translateX(-120px) scaleX(-1);
+    }
+
+    100% {
+      transform: translateX(-120px) scaleX(1);
+    }
+  }
+
+  @keyframes arm-dig {
+
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    25% {
+      transform: rotate(-25deg);
+    }
+
+    50% {
+      transform: rotate(10deg);
+    }
+
+    75% {
+      transform: rotate(-15deg);
+    }
+  }
+
+  @keyframes dust-float {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0.5);
+    }
+
+    20% {
+      opacity: 0.8;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-40px) translateX(var(--dust-x, 10px)) scale(1.2);
+    }
+  }
+
+  @keyframes stripe-scroll {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 40px 0;
+    }
+  }
+
+  @keyframes glow-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.05);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(251, 191, 36, 0.5), inset 0 0 30px rgba(251, 191, 36, 0.1);
+    }
+  }
+
+  @keyframes cone-wobble {
+
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+
+  --animate-backhoe-drive: backhoe-drive 8s linear infinite;
+  --animate-arm-dig: arm-dig 1.5s ease-in-out infinite;
+  --animate-dust: dust-float 1.8s ease-out infinite;
+  --animate-stripes: stripe-scroll 0.8s linear infinite;
+  --animate-glow: glow-pulse 2s ease-in-out infinite;
+  --animate-cone: cone-wobble 1s ease-in-out infinite;
+}
+
+html,
+:host {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Custom scrollbar utility for code blocks and other elements */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #090b12;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  /* slate-600 */
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  /* slate-500 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: #090b12;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Custom chat scrollbar - hidden by default, shows on user scroll */
+.chat-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.chat-scroll-container.show-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
+}
+
+.chat-scroll-container.show-scrollbar:hover {
+  scrollbar-color: rgba(100, 116, 139, 0.7) transparent;
+}
+
+/* WebKit scrollbar (Chrome, Safari, Edge) */
+.chat-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+  margin: 8px 0;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  transition: background 0.3s ease;
+}
+
+/* Show scrollbar thumb only when .show-scrollbar is active */
+.chat-scroll-container.show-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.chat-scroll-container.show-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rio-primary);
+}
+
+.chat-scroll-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.chat-scroll-container::-webkit-scrollbar-button {
+  display: none;
+}
+
+@keyframes flow-bubble {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.flow-bubble {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 8px;
+  width: 8px;
+  border-radius: 9999px;
+  background: rgba(0, 43, 127, 0.65);
+  transform: translate(-50%, -50%);
+  animation: flow-bubble 2.4s linear infinite;
+}
+
+.flow-bubble--delay-1 {
+  animation-delay: 0.6s;
+}
+
+.flow-bubble--delay-2 {
+  animation-delay: 1.2s;
+}

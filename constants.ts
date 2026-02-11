@@ -1,115 +1,22 @@
-import type { Model } from './types';
-import {
-  Bot,
-  Cpu,
-  Code2,
-  FileText,
-  Mic,
-  ScanSearch,
-  GitBranch,
-  Aperture,
-  BoxSelect,
-  Volume2,
-  FlaskConical,
-  GraduationCap,
-  Hammer,
-  Terminal,
-  Sparkles,
-  Brain,
-  Globe,
-  Eye,
-  Scan,
-  AudioLines,
-  Binary,
-  Atom,
-  Music,
-  Palette,
-  Box,
-  Map,
-} from 'lucide-react';
+import type { Model } from './types/index';
+import type { Locale } from './types/locale';
+import { Code2, Terminal, Eye, Search } from 'lucide-react';
+import { ModelGlyphXL, ModelGlyphL, ModelGlyphM, ModelGlyphS } from './components/icons/ModelSizeGlyphs';
 
 export const RIO_MODELS: Model[] = [
   {
-    name: 'Rio 2.0 Omni',
+    name: 'Rio 3.0 Open',
     description:
-      'Nosso modelo flagship multimodal, unindo as capacidades de Transcrição, ML, Search e Visão em uma única e poderosa IA.',
-    category: 'Flagship',
-    Icon: Sparkles,
-    tags: ['Flagship', 'Multimodal', 'State-of-the-art'],
-    supportsChat: true,
-  },
-  {
-    name: 'Rio 2.5 Omni',
-    description:
-      'Nosso modelo flagship multimodal, unindo as capacidades de Transcrição, ML, Search e Visão em uma única e poderosa IA.',
-    category: 'Flagship',
-    Icon: Sparkles,
-    tags: ['Flagship', 'Multimodal', 'State-of-the-art'],
-    supportsChat: true,
-  },
-  {
-    name: 'Rio 2.0',
-    description:
-      'Modelo de linguagem de grande escala pós-treinado a partir do Qwen 2.5 32B para alta performance em tarefas complexas.',
-    category: 'Linguagem',
-    Icon: Brain,
-    tags: ['Linguagem', '32B Parâmetros'],
-    baseModel: 'Qwen 2.5 32B Instruct',
-    baseModelUrl: 'https://huggingface.co/Qwen/Qwen2.5-32B-Instruct',
-    parameters: '32 Bilhões',
-    license: 'Uso proprietário (não open source)',
-    codeSnippets: [
-      {
-        lang: 'cURL',
-        Icon: Terminal,
-        code: `curl -X POST https://api.iplan.rio/v1/chat/completions \\
--H "Authorization: Bearer $RIO_API_KEY" \\
--H "Content-Type: application/json" \\
--d '{
-  "model": "rio-2.0-32b",
-  "messages": [{"role": "user", "content": "Resuma o plano diretor de mobilidade do Rio."}]
-}'`,
-      },
-    ],
-  },
-  {
-    name: 'Rio 2.5',
-    description:
-      'Modelo de linguagem de grande escala pós-treinado a partir do Qwen3-Next para alta performance em tarefas complexas.',
-    category: 'Linguagem',
-    Icon: Brain,
-    tags: ['Linguagem', '80B Parâmetros'],
-    baseModel: 'Qwen3-Next',
-    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-Next',
-    parameters: '80 Bilhões (3B ativados)',
-    license: 'Uso proprietário (não open source)',
-    codeSnippets: [
-      {
-        lang: 'cURL',
-        Icon: Terminal,
-        code: `curl -X POST https://api.iplan.rio/v1/chat/completions \\
--H "Authorization: Bearer $RIO_API_KEY" \\
--H "Content-Type: application/json" \\
--d '{
-  "model": "rio-2.5",
-  "messages": [{"role": "user", "content": "Resuma o plano diretor de mobilidade do Rio."}]
-}'`,
-      },
-    ],
-  },
-  {
-    name: 'Rio 2.5 Preview',
-    description:
-      'Uma prévia do futuro. Este modelo open source, baseado no Qwen 3, oferece um equilíbrio excepcional entre performance e eficiência.',
+      'Nosso modelo Open Source flagship,\ncom performance igual aos melhores modelos abertos atuais.',
     category: 'Open Source',
-    Icon: FlaskConical,
-    tags: ['Open Source', 'CC BY 4.0', '30B Parâmetros', 'Research Preview'],
+    Icon: ModelGlyphXL,
+    tags: ['235B parâmetros · 22B ativos', 'Licença MIT'],
     isOpenSource: true,
-    baseModel: 'Qwen 3 30B-A3B 2507 Thinking',
-    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-30B-A3B-Thinking-2507',
-    parameters: '30 Bilhões (3B ativados)',
-    license: 'Creative Commons Attribution 4.0',
-    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/deed.en',
+    baseModel: 'Qwen3-235B-A22B-Thinking-2507',
+    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507',
+    parameters: '235 Bilhões (22B ativados)',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
     datasets: ['nvidia/OpenScienceReasoning-2', 'nvidia/Nemotron-Post-Training-Dataset-v1'],
     datasetLinks: [
       {
@@ -121,15 +28,81 @@ export const RIO_MODELS: Model[] = [
         url: 'https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1',
       },
     ],
-    huggingFaceUrl: 'https://huggingface.co/IPLANRIO/rio-2.5-preview',
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-3.0-Open',
+  },
+  {
+    name: 'Rio 3.0 Open Mini',
+    description:
+      'Nossa versão Open Source mobile,\nfeita para rodar em qualquer celular.',
+    category: 'Open Source',
+    Icon: ModelGlyphM,
+    tags: ['4B parâmetros', 'Licença MIT'],
+    isOpenSource: true,
+    baseModel: 'Qwen 3 4B 2507',
+    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-4B-Thinking-2507',
+    parameters: '4 Bilhões',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
+    datasets: ['nvidia/OpenScienceReasoning-2', 'nvidia/Nemotron-Post-Training-Dataset-v1'],
+    datasetLinks: [
+      {
+        label: 'nvidia/OpenScienceReasoning-2',
+        url: 'https://huggingface.co/datasets/nvidia/OpenScienceReasoning-2',
+      },
+      {
+        label: 'nvidia/Nemotron-Post-Training-Dataset-v1',
+        url: 'https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1',
+      },
+    ],
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-3.0-Open-Mini',
+  },
+  {
+    name: 'Rio 3.0 Open Nano',
+    description:
+      'Nosso modelo mais compacto.\nConsegue rodar dez mil perguntas por apenas 1 real.',
+    category: 'Open Source',
+    Icon: ModelGlyphS,
+    tags: ['1.7B parâmetros', 'Licença MIT'],
+    isOpenSource: true,
+    baseModel: 'Qwen 3 1.7B',
+    parameters: '1.7 Bilhões',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-3.0-Open-Nano',
+  },
+  {
+    name: 'Rio 2.5 Open',
+    description:
+      'Nosso modelo mais criativo e cheio de personalidade,\nfeito para rodar localmente no seu computador.',
+    category: 'Open Source',
+    Icon: ModelGlyphL,
+    tags: ['30B parâmetros · 3B ativos', 'Licença MIT'],
+    isOpenSource: true,
+    baseModel: 'Qwen 3 30B 2507',
+    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-30B-A3B-Thinking-2507',
+    parameters: '30 Bilhões (3B ativados)',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
+    datasets: ['nvidia/OpenScienceReasoning-2', 'nvidia/Nemotron-Post-Training-Dataset-v1'],
+    datasetLinks: [
+      {
+        label: 'nvidia/OpenScienceReasoning-2',
+        url: 'https://huggingface.co/datasets/nvidia/OpenScienceReasoning-2',
+      },
+      {
+        label: 'nvidia/Nemotron-Post-Training-Dataset-v1',
+        url: 'https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1',
+      },
+    ],
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-2.5-Open',
     codeSnippets: [
       {
         lang: 'Python',
         Icon: Code2,
         code: `from transformers import AutoTokenizer, AutoModelForCausalLM
 
-tokenizer = AutoTokenizer.from_pretrained("IPLANRIO/rio-2.5-preview")
-model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-preview")
+tokenizer = AutoTokenizer.from_pretrained("IPLANRIO/rio-2.5-open")
+model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-open")
 
 # Experimente a nova geração de modelos Rio!`,
       },
@@ -140,157 +113,124 @@ model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-preview")
 -H "Authorization: Bearer $RIO_API_KEY" \\
 -H "Content-Type: application/json" \\
 -d '{
-  "model": "rio-2.5-preview",
+  "model": "rio-2.5-open",
   "messages": [{"role": "user", "content": "Quais as novidades do Rio 2.5?"}]
 }'`,
       },
     ],
   },
   {
-    name: 'Rio 2.0 Preview',
+    name: 'Rio 2.5 Open VL',
     description:
-      'Versão open source de alta performance, pós-treinada a partir do Qwen 2.5 14B, ideal para pesquisa e desenvolvimento.',
+      'Nosso modelo de visão computacional.\nGrounding, OCR, QA, Vídeos? Ele faz tudo.',
     category: 'Open Source',
-    Icon: FlaskConical,
-    tags: ['Open Source', 'CC BY 4.0', '14B Parâmetros'],
+    Icon: Eye,
+    tags: ['4B parâmetros', 'Licença MIT'],
     isOpenSource: true,
-    baseModel: 'Qwen 2.5 14B Instruct',
-    baseModelUrl: 'https://huggingface.co/Qwen/Qwen2.5-14B-Instruct',
-    parameters: '14 Bilhões',
-    license: 'Creative Commons Attribution 4.0 (CC BY 4.0)',
-    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/deed.en',
-    datasets: ['nvidia/OpenScienceReasoning-2', 'nvidia/Nemotron-Post-Training-Dataset-v1'],
-    datasetLinks: [
-      {
-        label: 'nvidia/OpenScienceReasoning-2',
-        url: 'https://huggingface.co/datasets/nvidia/OpenScienceReasoning-2',
-      },
-      {
-        label: 'nvidia/Nemotron-Post-Training-Dataset-v1',
-        url: 'https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v1',
-      },
-    ],
-    huggingFaceUrl: 'https://huggingface.co/IPLANRIO/rio-2.0-14b',
-    codeSnippets: [
-      {
-        lang: 'Python',
-        Icon: Code2,
-        code: `from transformers import AutoTokenizer, AutoModelForCausalLM
+    baseModel: 'Qwen 3 VL 4b',
+    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-2.5-Open-VL',
+  },
+  {
+    name: 'Rio 3.0 Open Search',
+    description:
+      'O modelo de pesquisa na web mais avançado do mundo.',
+    category: 'Open Source',
+    Icon: Search,
+    tags: ['235B parâmetros · 22B ativos', 'Licença MIT'],
+    isOpenSource: true,
+    baseModel: 'Qwen 3 235B 2507',
+    baseModelUrl: 'https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507',
+    license: 'MIT',
+    licenseUrl: 'https://opensource.org/license/mit',
+    huggingFaceUrl: 'https://huggingface.co/prefeitura-rio/Rio-3.0-Open-Search',
+  },
+];
 
-tokenizer = AutoTokenizer.from_pretrained("IPLANRIO/rio-2.0-14b")
-model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.0-14b")
+const RIO_MODELS_EN: Record<
+  string,
+  {
+    description: string;
+    tags?: string[];
+    parameters?: string;
+    codeSnippets?: Record<string, string>;
+  }
+> = {
+  'Rio 3.0 Open': {
+    description:
+      'Our flagship open-source model,\nwith performance on par with today\'s best open models.',
+    tags: ['235B parameters · 22B active', 'MIT License'],
+    parameters: '235 Billion (22B active)',
+  },
+  'Rio 3.0 Open Mini': {
+    description:
+      'Our mobile open-source version,\nbuilt to run on any smartphone.',
+    tags: ['4B parameters', 'MIT License'],
+    parameters: '4 Billion',
+  },
+  'Rio 3.0 Open Nano': {
+    description:
+      'Our most compact model.\nIt can run ten thousand prompts for just 1 BRL.',
+    tags: ['1.7B parameters', 'MIT License'],
+    parameters: '1.7 Billion',
+  },
+  'Rio 2.5 Open': {
+    description:
+      'Our most creative model, full of personality,\nbuilt to run locally on your computer.',
+    tags: ['30B parameters · 3B active', 'MIT License'],
+    parameters: '30 Billion (3B active)',
+    codeSnippets: {
+      Python: `from transformers import AutoTokenizer, AutoModelForCausalLM
 
-# Seu código de inferência aqui...`,
-      },
-      {
-        lang: 'cURL',
-        Icon: Terminal,
-        code: `curl -X POST https://api.iplan.rio/v1/chat/completions \\
+tokenizer = AutoTokenizer.from_pretrained("IPLANRIO/rio-2.5-open")
+model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-open")
+
+# Try the new generation of Rio models!`,
+      cURL: `curl -X POST https://api.iplan.rio/v1/chat/completions \\
 -H "Authorization: Bearer $RIO_API_KEY" \\
 -H "Content-Type: application/json" \\
 -d '{
-  "model": "rio-2.0-14b",
-  "messages": [{"role": "user", "content": "Oi, Rio!"}]
+  "model": "rio-2.5-open",
+  "messages": [{"role": "user", "content": "What\'s new in Rio 2.5?"}]
 }'`,
-      },
-    ],
+    },
   },
-  {
-    name: 'Rio 2.0 Search',
+  'Rio 2.5 Open VL': {
     description:
-      'Variante do Rio 2.0 otimizada para pesquisas na web, oferecendo respostas rápidas e custo-eficientes.',
-    category: 'Busca',
-    Icon: Globe,
-    tags: ['Busca na Web', 'Rápido', 'Custo-eficiente', 'Open Source'],
-    isOpenSource: true,
+      'Our computer vision model.\nGrounding, OCR, QA, videos? It does it all.',
+    tags: ['4B parameters', 'MIT License'],
   },
-  {
-    name: 'Rio 2.5 Search',
+  'Rio 3.0 Open Search': {
     description:
-      'Variante do Rio 2.5 otimizada para pesquisas na web, oferecendo respostas rápidas e custo-eficientes.',
-    category: 'Busca',
-    Icon: Globe,
-    tags: ['Busca na Web', 'Rápido', 'Custo-eficiente', 'Open Source'],
-    isOpenSource: true,
+      'The world\'s most advanced web search model.',
+    tags: ['235B parameters · 22B active', 'MIT License'],
   },
-  {
-    name: 'Rio 2.0 Visão',
-    description:
-      'Especializado em visão computacional, com foco em OCR e VQA para documentos em português do Brasil.',
-    category: 'Visão',
-    Icon: Eye,
-    tags: ['Visão', 'OCR', 'VQA', 'PT-BR'],
-  },
-  {
-    name: 'Rio 2.5 Visão',
-    description:
-      'Especializado em visão computacional, com foco em OCR e VQA para documentos em português do Brasil.',
-    category: 'Visão',
-    Icon: Eye,
-    tags: ['Visão', 'OCR', 'VQA', 'PT-BR'],
-  },
-  {
-    name: 'Rio 2.0 Grounding',
-    description:
-      'Treinado para detectar e localizar objetos em imagens com precisão, utilizando bounding boxes e pontos.',
-    category: 'Visão',
-    Icon: Scan,
-    tags: ['Visão', 'Detecção de Objetos', 'Grounding'],
-  },
-  {
-    name: 'Rio 2.5 Grounding',
-    description:
-      'Treinado para detectar e localizar objetos em imagens com precisão, utilizando bounding boxes e pontos.',
-    category: 'Visão',
-    Icon: Scan,
-    tags: ['Visão', 'Detecção de Objetos', 'Grounding'],
-  },
-  {
-    name: 'Rio 2.0 Transcrição',
-    description:
-      'State-of-the-art em transcrição de áudio para texto, com especialização em português do Brasil e inglês.',
-    category: 'Áudio',
-    Icon: AudioLines,
-    tags: ['Áudio', 'Transcrição', 'State-of-the-art', 'PT-BR'],
-  },
-  {
-    name: 'Rio 2.5 Transcrição',
-    description:
-      'State-of-the-art em transcrição de áudio para texto, com especialização em português do Brasil e inglês.',
-    category: 'Áudio',
-    Icon: AudioLines,
-    tags: ['Áudio', 'Transcrição', 'State-of-the-art', 'PT-BR'],
-  },
-  {
-    name: 'Rio 2.0 Voz',
-    description:
-      'Gera áudio natural e realista a partir de texto, considerado state-of-the-art para sotaques brasileiros.',
-    category: 'Áudio',
-    Icon: Volume2,
-    tags: ['Áudio', 'Text-to-Speech', 'Sotaques Brasileiros'],
-  },
-  {
-    name: 'Rio 2.5 Voz',
-    description:
-      'Gera áudio natural e realista a partir de texto, considerado state-of-the-art para sotaques brasileiros.',
-    category: 'Áudio',
-    Icon: Volume2,
-    tags: ['Áudio', 'Text-to-Speech', 'Sotaques Brasileiros'],
-  },
-  {
-    name: 'Rio 2.0 ML',
-    description:
-      'Especializado em programação, com foco em machine learning e desenvolvimento de kernels de alta performance.',
-    category: 'Código',
-    Icon: Binary,
-    tags: ['Código', 'Machine Learning', 'Kaggle'],
-  },
-  {
-    name: 'Rio 2.5 ML',
-    description:
-      'Especializado em programação, com foco em machine learning e desenvolvimento de kernels de alta performance.',
-    category: 'Código',
-    Icon: Binary,
-    tags: ['Código', 'Machine Learning', 'Kaggle'],
-  },
-];
+};
+
+export const getRioModels = (locale: Locale): Model[] => {
+  if (locale === 'pt-BR') {
+    return RIO_MODELS;
+  }
+
+  return RIO_MODELS.map((model) => {
+    const translatedModel = RIO_MODELS_EN[model.name];
+    if (!translatedModel) {
+      return model;
+    }
+
+    return {
+      ...model,
+      description: translatedModel.description,
+      tags: translatedModel.tags ?? model.tags,
+      parameters: translatedModel.parameters ?? model.parameters,
+      codeSnippets: translatedModel.codeSnippets
+        ? model.codeSnippets?.map((snippet) => ({
+            ...snippet,
+            code: translatedModel.codeSnippets?.[snippet.lang] ?? snippet.code,
+          }))
+        : model.codeSnippets,
+    };
+  });
+};

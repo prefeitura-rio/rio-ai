@@ -1,7 +1,6 @@
-
 import React from 'react';
-import type { Model } from '../types';
-import { ArrowRight } from 'lucide-react';
+import type { Model } from '../types/index';
+import { useLocale } from '../contexts/LocaleContext';
 
 interface ModelCardProps {
   model: Model;
@@ -9,15 +8,18 @@ interface ModelCardProps {
 }
 
 export const ModelCard: React.FC<ModelCardProps> = ({ model, onSelectModel }) => {
-  const { name, description, Icon, tags, isOpenSource } = model;
+  const { isEnglish } = useLocale();
+  const { name, description, tags, isOpenSource } = model;
   return (
-    <div className="flex flex-col rounded-lg bg-white border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-rio-primary hover:-translate-y-1 h-full">
+    <button
+      type="button"
+      onClick={() => onSelectModel(model)}
+      aria-label={isEnglish ? `View more about ${name}` : `Ver mais sobre ${name}`}
+      className="group flex w-full flex-col rounded-lg bg-white border border-slate-200 text-left shadow-sm transition-all duration-300 hover:shadow-lg hover:border-rio-primary hover:-translate-y-1 h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rio-primary focus-visible:ring-offset-2"
+    >
       <div className="p-6 flex-grow">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-rio-primary/10">
-              <Icon className="h-6 w-6 text-rio-primary" />
-            </div>
+          <div className="flex items-center">
             <h3 className="text-xl font-semibold text-prose">{name}</h3>
           </div>
           {isOpenSource && (
@@ -26,7 +28,7 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, onSelectModel }) =>
             </span>
           )}
         </div>
-        <p className="mt-4 text-prose-light text-sm leading-6 flex-grow">
+        <p className="mt-4 text-prose-light text-sm leading-6 flex-grow whitespace-pre-line">
           {description}
         </p>
       </div>
@@ -36,21 +38,17 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, onSelectModel }) =>
             {tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
+                className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-[#6C757D]"
               >
                 {tag}
               </span>
             ))}
           </div>
-          <button
-            onClick={() => onSelectModel(model)}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-rio-primary transition hover:text-blue-800 group"
-          >
-            Ver Detalhes
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
+          <span className="inline-flex w-[92px] items-center justify-center text-center text-sm font-semibold text-[#3262B7] transition group-hover:opacity-85">
+            {isEnglish ? 'View more' : 'Ver mais'}
+          </span>
         </div>
       </div>
-    </div>
+    </button>
   );
 };

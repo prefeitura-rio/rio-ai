@@ -1,27 +1,93 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type ChatRole,
+  type MessageTree,
+  type Attachment,
+  createEmptyTree,
+  computeFlatMessages,
+  addNode,
+  getSiblingAtOffset,
+  recomputePathFromNode,
+} from '../utils/messageTree';
 
-export type ChatRole = 'user' | 'assistant';
+// Re-export types for consumers
+export type { ChatRole, ChatMessage, Attachment } from '../utils/messageTree';
 
-export interface ChatMessage {
-  role: ChatRole;
-  content: string;
-}
-
+/**
+ * Options for configuring the useRioChat hook.
+ */
 interface UseRioChatOptions {
+  /** Model identifier to use (default: 'rio-3.0-open') */
   model?: string;
+  /** API endpoint URL (default: '/api/chat') */
   apiUrl?: string;
-  initialMessages?: ChatMessage[];
+  /** Initial messages to populate the conversation */
+  initialMessages?: Array<{ role: ChatRole; content: string }>;
+  /** System prompt for the AI (null to disable) */
   systemPrompt?: string | null;
+  /** Maximum number of messages to include in history (null for unlimited) */
   historyLimit?: number | null;
+  /** Custom error message to display on API failures */
   errorMessage?: string;
 }
 
 const DEFAULT_API_URL = '/api/chat';
-const DEFAULT_MODEL = 'rio-2';
-const DEFAULT_SYSTEM_PROMPT = 'You are a helpful assistant.';
-const DEFAULT_HISTORY_LIMIT = 6;
+const DEFAULT_MODEL = 'rio-3.0-open';
+const DEFAULT_SYSTEM_PROMPT =
+  'Seja amigável e respeitoso, sempre buscando atender da melhor maneira possível. Responda na mesma língua que o usuário estiver usando.';
+const DEFAULT_HISTORY_LIMIT = 30;
 const DEFAULT_ERROR_MESSAGE =
   'Desculpe, ocorreu um erro ao me comunicar com a API. Por favor, tente novamente mais tarde.';
+
+type ApiContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
+  | { type: 'file'; file: { filename: string; file_data: string } };
+
+type ApiMessage = { role: ChatRole; content: string | ApiContentBlock[] };
+
+const buildContentPayload = (
+  content: string,
+  attachments?: Attachment[]
+): string | ApiContentBlock[] => {
+  if (!attachments || attachments.length === 0) {
+    return content;
+  }
+
+  const contentBlock: ApiContentBlock[] = [];
+
+  if (content) {
+    contentBlock.push({ type: 'text', text: content });
+  }
+
+  attachments.forEach((att) => {
+    if (att.type === 'image') {
+      contentBlock.push({
+        type: 'image_url',
+        image_url: { url: att.dataUrl },
+      });
+    } else if (att.type === 'file') {
+      contentBlock.push({
+        type: 'file',
+        file: {
+          filename: att.name,
+          file_data: att.dataUrl,
+        },
+      });
+    }
+  });
+
+  return contentBlock;
+};
+
+const buildApiMessage = (
+  role: ChatRole,
+  content: string,
+  attachments?: Attachment[]
+): ApiMessage => ({
+  role,
+  content: buildContentPayload(content, attachments),
+});
 
 export function useRioChat(options: UseRioChatOptions = {}) {
   const {
@@ -39,105 +105,445 @@ export function useRioChat(options: UseRioChatOptions = {}) {
 
   const targetApiUrl = apiUrl ?? environmentApiUrl ?? DEFAULT_API_URL;
 
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [tree, setTree] = useState<MessageTree>(() => {
+    // Initialize tree from initial messages
+    let t = createEmptyTree();
+    let parentId: string | null = null;
+    const path: string[] = [];
+
+    for (const msg of initialMessages) {
+      const { newTree, newNodeId } = addNode(t, msg.role, msg.content, parentId);
+      t = newTree;
+      path.push(newNodeId);
+      parentId = newNodeId;
+    }
+
+    return { ...t, selectedPath: path };
+  });
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const isLoadingRef = useRef(isLoading);
+  isLoadingRef.current = isLoading;
 
+  // AbortController for canceling requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Derive flat messages from tree
+  const messages = useMemo(() => computeFlatMessages(tree), [tree]);
+
+  // Serialize initial messages for effect dependency
   const serializedInitialMessages = useMemo(
     () => JSON.stringify(initialMessages),
     [initialMessages]
   );
 
   useEffect(() => {
-    setMessages(initialMessages);
+    // Reinitialize tree from initial messages when they change
+    let t = createEmptyTree();
+    let parentId: string | null = null;
+    const path: string[] = [];
+
+    for (const msg of initialMessages) {
+      const { newTree, newNodeId } = addNode(t, msg.role, msg.content, parentId);
+      t = newTree;
+      path.push(newNodeId);
+      parentId = newNodeId;
+    }
+
+    setTree({ ...t, selectedPath: path });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serializedInitialMessages]);
 
-  const removeMessageAt = useCallback(
-    (index: number) => {
-      setMessages((prev) => {
-        if (index < 0 || index >= prev.length) {
-          return prev;
-        }
-        const next = prev.slice(0, index).concat(prev.slice(index + 1));
-        return next;
-      });
-    },
-    [setMessages]
-  );
+  // Navigate between sibling messages
+  const navigateMessage = useCallback((messageId: string, direction: -1 | 1) => {
+    setTree((prevTree) => {
+      const siblingId = getSiblingAtOffset(prevTree, messageId, direction);
+      if (!siblingId) return prevTree;
 
+      const newPath = recomputePathFromNode(prevTree, siblingId);
+      return { ...prevTree, selectedPath: newPath };
+    });
+  }, []);
+
+  // Remove message at index (for editing - now deprecated, use editAndResubmit)
+  const removeMessageAt = useCallback((_index: number) => {
+    // This is kept for backward compatibility but doesn't modify the tree
+    // The editing flow should use editAndResubmit instead
+  }, []);
+
+  // Insert message at index (deprecated)
   const insertMessageAt = useCallback(
-    (index: number, message: ChatMessage) => {
-      setMessages((prev) => {
-        const safeIndex = Math.min(Math.max(index, 0), prev.length);
-        const next = [...prev];
-        next.splice(safeIndex, 0, message);
-        return next;
-      });
+    (_index: number, _message: { role: ChatRole; content: string }) => {
+      // Deprecated: use editAndResubmit instead
     },
-    [setMessages]
+    []
   );
 
-  const handleSubmit = async (event?: React.FormEvent<HTMLFormElement>) => {
-    if (event) {
-      event.preventDefault();
+  // Stop ongoing request
+  const stop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
+    setIsLoading(false);
+  }, []);
 
-    if (!input.trim() || isLoading) return;
+  // Submit a new message
+  const handleSubmit = useCallback(
+    async (event?: React.FormEvent<HTMLFormElement>, attachments: Attachment[] = []) => {
+      if (event) {
+        event.preventDefault();
+      }
 
-    const userMessage: ChatMessage = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
+      const hasContent = input.trim().length > 0;
+      const hasAttachments = attachments && attachments.length > 0;
 
-    setInput('');
-    setIsLoading(true);
+      if ((!hasContent && !hasAttachments) || isLoadingRef.current) return;
 
-    const currentMessages =
-      typeof historyLimit === 'number' && historyLimit >= 0
-        ? messages.slice(-historyLimit)
-        : messages;
+      const userContent = input;
+      setInput('');
+      setIsLoading(true);
 
-    const payloadMessages = [
-      ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-      ...currentMessages,
-      userMessage,
-    ];
+      // Add user message to tree
+      setTree((prevTree) => {
+        const parentId: string | null =
+          prevTree.selectedPath.length > 0
+            ? (prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null)
+            : null;
 
-    try {
-      const response = await fetch(targetApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages: payloadMessages,
-          stream: false,
-        }),
+        const { newTree, newNodeId } = addNode(prevTree, 'user', userContent, parentId, attachments);
+        return {
+          ...newTree,
+          selectedPath: [...prevTree.selectedPath, newNodeId],
+        };
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+      // Wait for state to settle
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Rebuild history with attachments
+      const historyPayload = tree.selectedPath
+        .map((id) => {
+          const node = tree.nodes.get(id);
+          return node ? buildApiMessage(node.role, node.content, node.attachments) : null;
+        })
+        .filter((message): message is ApiMessage => Boolean(message));
+
+      // We need to apply history limit to this payload
+      // Note: historyPayload is derived from the *current* tree state (before update),
+      // so it contains previous messages but NOT the new one we just added via setTree.
+      const payloadHistorySlice =
+        typeof historyLimit === 'number' && historyLimit >= 0
+          ? historyPayload.slice(-historyLimit)
+          : historyPayload;
+
+      // Construct the current message payload object
+      const currentUserMessagePayload = buildApiMessage('user', userContent, attachments);
+
+      const payloadMessages = [
+        ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+        ...payloadHistorySlice,
+        currentUserMessagePayload
+      ];
+
+      try {
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch(targetApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: payloadMessages,
+            stream: false,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const assistantContent = data.choices?.[0]?.message?.content?.trim() ?? '';
+
+        if (assistantContent) {
+          setTree((prevTree) => {
+            // Find the user node we just added (last in path)
+            const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
+            const { newTree, newNodeId } = addNode(
+              prevTree,
+              'assistant',
+              assistantContent,
+              userParentId
+            );
+            return {
+              ...newTree,
+              selectedPath: [...prevTree.selectedPath, newNodeId],
+            };
+          });
+        }
+      } catch (error) {
+        // Don't show error message if request was aborted
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to fetch from Rio API', error);
+        setTree((prevTree) => {
+          const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
+          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userParentId);
+          return {
+            ...newTree,
+            selectedPath: [...prevTree.selectedPath, newNodeId],
+          };
+        });
+      } finally {
+        abortControllerRef.current = null;
+        setIsLoading(false);
+      }
+    },
+    [input, tree, historyLimit, systemPrompt, targetApiUrl, model, errorMessage]
+  );
+
+  // Regenerate response - creates a new sibling branch
+  const regenerate = useCallback(
+    async (index: number) => {
+      if (isLoadingRef.current) return;
+
+      // Find the user message at or before this index
+      const targetMessage = messages[index];
+      if (!targetMessage) return;
+
+      // Find the user message to regenerate from
+      let userMessageIndex = index;
+      if (targetMessage.role === 'assistant' && index > 0) {
+        userMessageIndex = index - 1;
       }
 
-      const data = await response.json();
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: data.choices?.[0]?.message?.content?.trim() ?? '',
-      };
+      const userMessage = messages[userMessageIndex];
+      if (!userMessage || userMessage.role !== 'user') return;
 
-      if (assistantMessage.content) {
-        setMessages((prev) => [...prev, assistantMessage]);
+      setIsLoading(true);
+
+      // Get the path up to and including the user message
+      const pathToUser = tree.selectedPath.slice(0, userMessageIndex + 1);
+
+      // Immediately truncate path to hide the old assistant response
+      // This makes the thinking animation appear in place of the old message
+      setTree((prevTree) => ({
+        ...prevTree,
+        selectedPath: pathToUser,
+      }));
+
+      // Prepare messages for API
+      const historyMessages = pathToUser
+        .map((id) => {
+          const node = tree.nodes.get(id);
+          return node ? buildApiMessage(node.role, node.content, node.attachments) : null;
+        })
+        .filter((message): message is ApiMessage => Boolean(message));
+
+      const historySlice =
+        typeof historyLimit === 'number' && historyLimit >= 0
+          ? historyMessages.slice(-historyLimit)
+          : historyMessages;
+
+      const payloadMessages = [
+        ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+        ...historySlice,
+      ];
+
+      try {
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch(targetApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: payloadMessages,
+            stream: false,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const assistantContent = data.choices?.[0]?.message?.content?.trim() ?? '';
+
+        if (assistantContent) {
+          setTree((prevTree) => {
+            const userNodeId: string | null = pathToUser[pathToUser.length - 1] ?? null;
+            const { newTree, newNodeId } = addNode(
+              prevTree,
+              'assistant',
+              assistantContent,
+              userNodeId
+            );
+            return {
+              ...newTree,
+              selectedPath: [...pathToUser, newNodeId],
+            };
+          });
+        }
+      } catch (error) {
+        // Don't show error message if request was aborted
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to fetch from Rio API', error);
+        setTree((prevTree) => {
+          const userNodeId: string | null = pathToUser[pathToUser.length - 1] ?? null;
+          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userNodeId);
+          return {
+            ...newTree,
+            selectedPath: [...pathToUser, newNodeId],
+          };
+        });
+      } finally {
+        abortControllerRef.current = null;
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch from Rio API', error);
-      const failureMessage: ChatMessage = {
-        role: 'assistant',
-        content: errorMessage,
-      };
-      setMessages((prev) => [...prev, failureMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [messages, tree, historyLimit, systemPrompt, targetApiUrl, model, errorMessage]
+  );
+
+  // Edit a message and create a new branch
+  const editAndResubmit = useCallback(
+    async (messageId: string, newContent: string) => {
+      if (isLoadingRef.current || !newContent.trim()) return;
+
+      // Find the message index
+      const messageIndex = tree.selectedPath.indexOf(messageId);
+      if (messageIndex === -1) return;
+
+      const node = tree.nodes.get(messageId);
+      if (!node || node.role !== 'user') return;
+
+      setIsLoading(true);
+
+      // Path up to the parent of the edited message
+      const pathToParent = tree.selectedPath.slice(0, messageIndex);
+      const parentId: string | null = pathToParent.length > 0 ? (pathToParent[pathToParent.length - 1] ?? null) : null;
+
+      // Create new user node as sibling
+      let treeAfterUser: MessageTree;
+
+      setTree((prevTree) => {
+        const { newTree, newNodeId } = addNode(
+          prevTree,
+          'user',
+          newContent,
+          parentId,
+          node.attachments
+        );
+        treeAfterUser = {
+          ...newTree,
+          selectedPath: [...pathToParent, newNodeId],
+        };
+        return treeAfterUser;
+      });
+
+      // Wait for state update
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Prepare messages for API
+      const historyMessages = pathToParent
+        .map((id) => {
+          const n = tree.nodes.get(id);
+          return n ? buildApiMessage(n.role, n.content, n.attachments) : null;
+        })
+        .filter((message): message is ApiMessage => Boolean(message));
+
+      const historySlice =
+        typeof historyLimit === 'number' && historyLimit >= 0
+          ? historyMessages.slice(-historyLimit)
+          : historyMessages;
+
+      const payloadMessages = [
+        ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+        ...historySlice,
+        buildApiMessage('user', newContent, node.attachments),
+      ];
+
+      try {
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch(targetApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: payloadMessages,
+            stream: false,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const assistantContent = data.choices?.[0]?.message?.content?.trim() ?? '';
+
+        if (assistantContent) {
+          setTree((prevTree) => {
+            const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
+            const { newTree, newNodeId } = addNode(
+              prevTree,
+              'assistant',
+              assistantContent,
+              userParentId
+            );
+            return {
+              ...newTree,
+              selectedPath: [...prevTree.selectedPath, newNodeId],
+            };
+          });
+        }
+      } catch (error) {
+        // Don't show error message if request was aborted
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to fetch from Rio API', error);
+        setTree((prevTree) => {
+          const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
+          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userParentId);
+          return {
+            ...newTree,
+            selectedPath: [...prevTree.selectedPath, newNodeId],
+          };
+        });
+      } finally {
+        abortControllerRef.current = null;
+        setIsLoading(false);
+      }
+    },
+    [tree, historyLimit, systemPrompt, targetApiUrl, model, errorMessage]
+  );
+
+  // Legacy editMessage - now calls editAndResubmit
+  const editMessage = useCallback(
+    (messageId: string, newContent: string) => {
+      editAndResubmit(messageId, newContent);
+    },
+    [editAndResubmit]
+  );
 
   return {
     messages,
@@ -147,5 +553,30 @@ export function useRioChat(options: UseRioChatOptions = {}) {
     removeMessageAt,
     insertMessageAt,
     handleSubmit,
+    regenerate,
+    navigateMessage,
+    editMessage,
+    editAndResubmit,
+    stop,
+    clearChat: useCallback(() => {
+      let t = createEmptyTree();
+      let parentId: string | null = null;
+      const path: string[] = [];
+
+      for (const msg of initialMessages) {
+        const { newTree, newNodeId } = addNode(t, msg.role, msg.content, parentId);
+        t = newTree;
+        path.push(newNodeId);
+        parentId = newNodeId;
+      }
+
+      setTree({ ...t, selectedPath: path });
+      setInput('');
+      setIsLoading(false);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    }, [initialMessages]),
   };
 }

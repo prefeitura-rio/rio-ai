@@ -1,82 +1,121 @@
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
-import { ChatSection } from './components/ChatSection';
-import { ModelsSection } from './components/ModelsSection';
 import { OpenSourceSection } from './components/OpenSourceSection';
-import { SciencePlatformSection } from './components/SciencePlatformSection';
-import { ResearchSection } from './components/ResearchSection';
-import { TechDetailsSection } from './components/TechDetailsSection';
-import { Footer } from './components/Footer';
 import { ModelDetailView } from './components/ModelDetailView';
-import type { Model } from './types';
-import { RIO_MODELS } from './constants';
+import { ErrorBoundary, ChatErrorBoundary, SectionErrorBoundary } from './components/ErrorBoundary';
+import { ChatSection } from './components/ChatSection';
+import type { Model, View } from './types/index';
+import { getRioModels } from './constants';
+import { LocaleProvider, useLocale } from './contexts/LocaleContext';
 
-type View = 'home' | 'chat' | 'opensource' | 'research';
+const FloatingLanguageToggle = () => {
+  const { isEnglish, toggleLocale } = useLocale();
+  const isPtBr = !isEnglish;
 
-function App() {
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  return (
+    <button
+      type="button"
+      onClick={toggleLocale}
+      aria-label={isPtBr ? 'Mudar para inglês' : 'Switch to Brazilian Portuguese'}
+      className="fixed z-[60] inline-flex items-center rounded-full border border-slate-300 bg-white p-1 text-xs font-semibold text-slate-700 shadow-md sm:bottom-6 sm:right-6"
+      style={{
+        bottom: 'max(1rem, env(safe-area-inset-bottom))',
+        right: 'max(1rem, env(safe-area-inset-right))',
+      }}
+    >
+      <span
+        className={`rounded-full px-3 py-1 ${isPtBr ? 'bg-slate-100 text-slate-900' : 'text-slate-600'}`}
+      >
+        PT-BR
+      </span>
+      <span
+        className={`rounded-full px-3 py-1 ${!isPtBr ? 'bg-slate-100 text-slate-900' : 'text-slate-600'}`}
+      >
+        EN
+      </span>
+    </button>
+  );
+};
+
+const AppContent = () => {
+  const { locale } = useLocale();
+  const models = useMemo(() => getRioModels(locale), [locale]);
+  const [selectedModelName, setSelectedModelName] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<View>('home');
 
+  const selectedModel = useMemo<Model | null>(() => {
+    if (!selectedModelName) return null;
+    return models.find((model) => model.name === selectedModelName) ?? null;
+  }, [models, selectedModelName]);
+
   const handleSelectModel = (model: Model) => {
-    setSelectedModel(model);
+    setSelectedModelName(model.name);
     window.scrollTo(0, 0);
   };
 
   const handleBack = () => {
-    setSelectedModel(null);
+    setSelectedModelName(null);
   };
 
   const handleNavigate = (view: View) => {
     setCurrentView(view);
-    setSelectedModel(null); // Deselect model when changing main views
+    setSelectedModelName(null);
     window.scrollTo(0, 0);
-  };
-
-  const [showContent, setShowContent] = useState(false);
-
-  const handleHeroAnimationComplete = () => {
-    setShowContent(true);
   };
 
   const renderView = () => {
     switch (currentView) {
       case 'chat':
-        return <ChatSection />;
-      case 'opensource':
-        const openSourceModels = RIO_MODELS.filter(m => m.isOpenSource);
-        return openSourceModels.length > 0 ? <OpenSourceSection models={openSourceModels} onSelectModel={handleSelectModel} /> : null;
-      case 'research':
-        return <ResearchSection />;
+        return (
+          <ChatErrorBoundary>
+            <ChatSection />
+          </ChatErrorBoundary>
+        );
+      case 'opensource': {
+        const openSourceModels = models.filter(
+          (m) => m.isOpenSource && m.name.includes('Open'),
+        );
+        return openSourceModels.length > 0 ? (
+          <SectionErrorBoundary sectionName="OpenSource">
+            <OpenSourceSection models={openSourceModels} onSelectModel={handleSelectModel} />
+          </SectionErrorBoundary>
+        ) : null;
+      }
       case 'home':
       default:
         return (
           <>
-            <Hero onNavigate={handleNavigate} onAnimationComplete={handleHeroAnimationComplete} />
-            <div
-              className={`transition-opacity duration-1000 ease-out ${showContent ? 'opacity-100' : 'opacity-0'}`}
-            >
-              <ModelsSection onSelectModel={handleSelectModel} />
-              <SciencePlatformSection />
-              <TechDetailsSection />
-            </div>
+            <Hero onNavigate={handleNavigate} />
           </>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Header onNavigate={handleNavigate} currentView={currentView} />
-      <main>
-        {selectedModel ? (
-          <ModelDetailView model={selectedModel} onBack={handleBack} />
-        ) : (
-          renderView()
-        )}
-      </main>
-      <Footer />
-    </div>
+    <ErrorBoundary name="App">
+      <div className="min-h-screen bg-white font-sans">
+        <Header onNavigate={handleNavigate} currentView={currentView} />
+        <main>
+          {selectedModel ? (
+            <ErrorBoundary name="ModelDetail">
+              <ModelDetailView model={selectedModel} onBack={handleBack} />
+            </ErrorBoundary>
+          ) : (
+            renderView()
+          )}
+        </main>
+        <FloatingLanguageToggle />
+      </div>
+    </ErrorBoundary>
+  );
+};
+
+function App() {
+  return (
+    <LocaleProvider>
+      <AppContent />
+    </LocaleProvider>
   );
 }
 
