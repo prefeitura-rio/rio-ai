@@ -33,9 +33,9 @@ const apiUrl =
 const apiKey = process.env.RIO_API_KEY;
 const allowedOrigins = parseAllowedOrigins(process.env.RIO_ALLOWED_ORIGINS);
 const validationConfig = buildValidationConfig(process.env);
-const upstreamTimeoutMs = parsePositiveInt(process.env.RIO_UPSTREAM_TIMEOUT_MS, 30000, {
+const upstreamTimeoutMs = parsePositiveInt(process.env.RIO_UPSTREAM_TIMEOUT_MS, 1200000, {
   min: 1000,
-  max: 120000,
+  max: 1200000,
 });
 
 const rateLimiter = createRateLimiter({

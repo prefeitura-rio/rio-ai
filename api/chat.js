@@ -19,10 +19,10 @@ const validationConfig = buildValidationConfig(process.env);
 
 const upstreamTimeoutMs = parsePositiveInt(
   process.env.RIO_UPSTREAM_TIMEOUT_MS,
-  30000,
+  1200000,
   {
     min: 1000,
-    max: 120000,
+    max: 1200000,
   }
 );
 

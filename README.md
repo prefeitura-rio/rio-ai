@@ -93,7 +93,7 @@ Crie um arquivo `.env.local` na raiz do projeto:
 | `RIO_RATE_LIMIT_WINDOW_MS` | Janela do rate limit em ms | `60000` |
 | `RIO_RATE_LIMIT_MAX` | Máximo de requisições por janela e por cliente | `30` |
 | `RIO_RATE_LIMIT_BLOCK_MS` | Tempo de bloqueio após exceder limite | `120000` |
-| `RIO_UPSTREAM_TIMEOUT_MS` | Timeout de requisição para API upstream | `30000` |
+| `RIO_UPSTREAM_TIMEOUT_MS` | Timeout de requisição para API upstream | `1200000` |
 | `RIO_MAX_BODY_BYTES` | Tamanho máximo do JSON aceito no endpoint | `8388608` |
 | `RIO_MAX_MESSAGES` | Máximo de mensagens por payload | `40` |
 | `RIO_MAX_MESSAGE_CHARS` | Máximo de caracteres por mensagem/bloco textual | `20000` |
