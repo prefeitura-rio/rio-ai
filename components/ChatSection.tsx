@@ -20,12 +20,107 @@ import rehypeKatex from 'rehype-katex';
 import { AnimateOnScroll } from './AnimateOnScroll';
 import { ThinkingAnimation } from './ThinkingAnimation';
 import { ChatMessage, useRioChat } from '../hooks/useRioChat';
-import { normalizeMathDelimiters } from '../lib/markdown';
+import {
+  COMPACT_TEXT_INLINE_MARKER,
+  normalizeMathDelimiters,
+} from '../lib/markdown';
 import { useLocale } from '../contexts/LocaleContext';
 import 'katex/dist/katex.min.css';
 
 const CHAT_MODEL_ID = 'rio-3.0-open';
 const CHAT_MODEL_NAME = 'Rio 3.0 Open';
+const COMPACT_CODE_LANGS = new Set(['', 'text', 'txt', 'plain', 'plaintext']);
+
+const remarkInlineCompactTextCode = () => {
+  const transformNode = (node: { children?: unknown[] } | null | undefined) => {
+    if (!node || !Array.isArray(node.children)) return;
+
+    for (const child of node.children as Array<{ children?: unknown[] }>) {
+      transformNode(child);
+    }
+
+    const nextChildren: unknown[] = [];
+
+    for (let index = 0; index < node.children.length; index += 1) {
+      const child = node.children[index] as {
+      type?: string;
+      lang?: string | null;
+      value?: string;
+      children?: Array<{ type?: string; value?: string }>;
+      };
+
+      if (child?.type === 'code') {
+        const rawLang = (child.lang ?? '').toLowerCase().trim();
+        const codeValue = String(child.value ?? '').trim();
+        const nonEmptyLines = codeValue
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+        const isSingleLine = nonEmptyLines.length === 1;
+        const isCompactTextCode =
+          isSingleLine && COMPACT_CODE_LANGS.has(rawLang);
+
+        if (isCompactTextCode) {
+          const prev = nextChildren[nextChildren.length - 1] as
+            | { type?: string; children?: Array<{ type?: string; value?: string }> }
+            | undefined;
+
+          if (prev?.type === 'paragraph' && Array.isArray(prev.children)) {
+            const prevLastChild = prev.children[prev.children.length - 1];
+            const needsSpace =
+              prevLastChild?.type === 'text' && typeof prevLastChild.value === 'string'
+                ? !/\s$/.test(prevLastChild.value)
+                : true;
+
+            if (needsSpace) {
+              prev.children.push({ type: 'text', value: ' ' });
+            }
+
+            prev.children.push({
+              type: 'inlineCode',
+              value: `${COMPACT_TEXT_INLINE_MARKER}${codeValue}`,
+            });
+            continue;
+          }
+
+          const nextOriginal = node.children[index + 1] as
+            | { type?: string; children?: Array<{ type?: string; value?: string }> }
+            | undefined;
+
+          if (nextOriginal?.type === 'paragraph' && Array.isArray(nextOriginal.children)) {
+            const existingChildren = nextOriginal.children;
+            const firstChild = existingChildren[0];
+            const needsSpaceAfter =
+              firstChild?.type === 'text' && typeof firstChild.value === 'string'
+                ? !/^\s/.test(firstChild.value)
+                : true;
+
+            nextOriginal.children = [
+              { type: 'inlineCode', value: `${COMPACT_TEXT_INLINE_MARKER}${codeValue}` },
+              ...(needsSpaceAfter ? [{ type: 'text', value: ' ' }] : []),
+              ...existingChildren,
+            ];
+            continue;
+          }
+
+          nextChildren.push({
+            type: 'paragraph',
+            children: [{ type: 'inlineCode', value: `${COMPACT_TEXT_INLINE_MARKER}${codeValue}` }],
+          });
+          continue;
+        }
+      }
+
+      nextChildren.push(child);
+    }
+
+    node.children = nextChildren;
+  };
+
+  return (tree: { children?: unknown[] }) => {
+    transformNode(tree);
+  };
+};
 
 const getNodeText = (node: React.ReactNode): string => {
   if (typeof node === 'string' || typeof node === 'number') {
@@ -88,6 +183,14 @@ const CodeBlock: React.FC<{
   const codeTextRaw = getNodeText(children ?? '');
   const codeText = codeTextRaw.replace(/\s+$/, '');
   const displayLanguageLabel = displayLanguage === 'code' ? 'text' : displayLanguage;
+  const compactCandidate = codeText.trim();
+  const compactNonEmptyLines = compactCandidate
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const isCompactSingleLineText = compactNonEmptyLines.length === 1;
+  const isCompactStandaloneTextBlock =
+    (displayLanguage === 'text' || displayLanguage === 'code') && isCompactSingleLineText;
   const blockWrapperClass =
     'group relative mt-3 w-full overflow-hidden rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
   const blockHeaderClass =
@@ -95,6 +198,8 @@ const CodeBlock: React.FC<{
   const blockCopyButtonClass =
     'inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 opacity-60 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100';
   const blockPreClass = 'm-0 overflow-auto px-4 pb-4 pt-1 text-[15px] leading-[1.65]';
+  const compactHighlightClass =
+    'inline-flex max-w-full items-center rounded-md border border-slate-300 bg-slate-50 px-2 py-0.5 font-mono text-[0.92em] leading-none text-rose-600';
 
   const handleCopyCode = useCallback(async () => {
     if (!codeText || typeof navigator === 'undefined' || !navigator.clipboard) return;
@@ -111,6 +216,14 @@ const CodeBlock: React.FC<{
   }, [codeText]);
 
   if (inline) {
+    const compactInlineText = codeText.startsWith(COMPACT_TEXT_INLINE_MARKER)
+      ? codeText.slice(COMPACT_TEXT_INLINE_MARKER.length)
+      : null;
+
+    if (compactInlineText) {
+      return <span className={compactHighlightClass}>{compactInlineText}</span>;
+    }
+
     return (
       <code
         className={[
@@ -123,6 +236,14 @@ const CodeBlock: React.FC<{
       >
         {children}
       </code>
+    );
+  }
+
+  if (isCompactStandaloneTextBlock) {
+    return (
+      <span className={`${compactHighlightClass} compact-text-pill-standalone`}>
+        {compactCandidate}
+      </span>
     );
   }
 
@@ -220,7 +341,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const markdownContent = normalizeMathDelimiters(message.content);
   const codeTheme = themes.oneLight;
-  const remarkPlugins = [remarkMath, remarkGfm, remarkBreaks];
+  const remarkPlugins = [remarkMath, remarkGfm, remarkBreaks, remarkInlineCompactTextCode];
   const rehypePlugins = [rehypeKatex];
 
   useEffect(
@@ -327,7 +448,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
             : 'px-0 py-0 text-prose'
             }`}
         >
-          <div className="min-w-0 max-w-full whitespace-normal break-words text-[14px] leading-relaxed text-prose space-y-3">
+          <div className="chat-markdown min-w-0 max-w-full whitespace-normal break-words text-[14px] leading-relaxed text-prose space-y-3">
             <ReactMarkdown
                 remarkPlugins={remarkPlugins}
                 rehypePlugins={rehypePlugins}
@@ -433,6 +554,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                   hr: () => <hr className="my-4 border border-slate-300/70" />,
                   p: ({ node: _node, className, ...paragraphProps }) => {
                     const paragraphClasses = [
+                      'markdown-paragraph',
                       className,
                       'mt-2',
                       'mb-2',

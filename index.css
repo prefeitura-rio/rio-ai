@@ -224,6 +224,23 @@ html,
   display: none;
 }
 
+/* Keep compact text pills from short markdown code fences inline with nearby text */
+.chat-markdown .compact-text-pill-standalone {
+  display: inline-flex;
+  margin: 0 0.35rem;
+  vertical-align: baseline;
+}
+
+.chat-markdown .markdown-paragraph:has(+ .compact-text-pill-standalone) {
+  display: inline;
+  margin: 0;
+}
+
+.chat-markdown .compact-text-pill-standalone + .markdown-paragraph {
+  display: inline;
+  margin: 0;
+}
+
 @keyframes flow-bubble {
   0% {
     left: 0;

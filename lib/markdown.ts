@@ -1,3 +1,34 @@
+export const COMPACT_TEXT_INLINE_MARKER = '__RIO_COMPACT_TEXT__:';
+
+export const normalizeCompactTextFences = (input: string): string => {
+  if (!input || !input.includes('```')) {
+    return input;
+  }
+
+  let normalized = input.replace(
+    /[ \t]*```(?:[ \t]*(?:text|txt|plain|plaintext))?[ \t]*\r?\n([^\r\n`]{1,60})\r?\n[ \t]*```[ \t]*/gi,
+    (fullMatch, snippet) => {
+      const normalizedSnippet = String(snippet).trim();
+      if (!normalizedSnippet) {
+        return fullMatch;
+      }
+      return `\`${COMPACT_TEXT_INLINE_MARKER}${normalizedSnippet}\``;
+    }
+  );
+
+  // Keep compact marker code inline with surrounding text.
+  normalized = normalized.replace(
+    /([^\r\n])\r?\n([ \t]*`__RIO_COMPACT_TEXT__:[^`\r\n]+`)/g,
+    '$1 $2'
+  );
+  normalized = normalized.replace(
+    /(`__RIO_COMPACT_TEXT__:[^`\r\n]+`)[ \t]*\r?\n([^\r\n])/g,
+    '$1 $2'
+  );
+
+  return normalized;
+};
+
 export const normalizeMathDelimiters = (input: string): string => {
   if (!input || !input.includes('\\')) {
     return input;
