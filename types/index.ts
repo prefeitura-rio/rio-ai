@@ -13,7 +13,7 @@ import type { ElementType, SVGProps } from 'react';
  * Application view/route type.
  * Previously duplicated in App.tsx, Header.tsx, and Hero.tsx.
  */
-export type View = 'home' | 'chat' | 'opensource';
+export type View = 'home' | 'chat' | 'opensource' | 'research' | 'contact';
 
 export type IconComponent = ElementType<SVGProps<SVGSVGElement>>;
 

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { OpenSourceSection } from './components/OpenSourceSection';
+import { ResearchSection } from './components/ResearchSection';
+import { ContactSection } from './components/ContactSection';
 import { ModelDetailView } from './components/ModelDetailView';
 import { ErrorBoundary, ChatErrorBoundary, SectionErrorBoundary } from './components/ErrorBoundary';
 import { ChatSection } from './components/ChatSection';
@@ -82,6 +84,14 @@ const AppContent = () => {
           </SectionErrorBoundary>
         ) : null;
       }
+      case 'research':
+        return (
+          <SectionErrorBoundary sectionName="Research">
+            <ResearchSection />
+          </SectionErrorBoundary>
+        );
+      case 'contact':
+        return <ContactSection />;
       case 'home':
       default:
         return (
