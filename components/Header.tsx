@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView }) => {
   const { isEnglish } = useLocale();
   const navLinks: { name: string; view: View }[] = [
     { name: 'Home', view: 'home' },
-    { name: 'Chat', view: 'chat' },
+    // { name: 'Chat', view: 'chat' }, // Temporarily hidden until chat is re-enabled.
     { name: 'Open Source', view: 'opensource' },
     { name: 'Research', view: 'research' },
     { name: isEnglish ? 'Contact us' : 'Fale conosco', view: 'contact' },

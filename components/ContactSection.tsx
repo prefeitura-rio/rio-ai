@@ -1,6 +1,6 @@
 import { useLocale } from '../contexts/LocaleContext';
 
-const DISCORD_URL = 'https://discord.com/';
+const DISCORD_URL = 'https://discord.com/invite/qsCfmwrwVP';
 const DISCORD_LABEL = 'Discord';
 
 interface ContactSectionItem {

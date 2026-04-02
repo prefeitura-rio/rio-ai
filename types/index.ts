@@ -98,3 +98,17 @@ export interface MessageTree {
   rootIds: string[];
   selectedPath: string[];
 }
+
+// ============================================================================
+// Research Types
+// ============================================================================
+
+export interface ResearchPost {
+  id: string;
+  title: string;
+  summary: string;
+  content?: string;
+  date: string;
+  imageUrl: string;
+  isFeatured?: boolean;
+}

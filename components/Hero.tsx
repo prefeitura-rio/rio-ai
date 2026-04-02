@@ -37,12 +37,12 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onAnimationComplete }) =
             </button>
             <button
               type="button"
-              onClick={() => onNavigate?.('chat')}
+              onClick={() => onNavigate?.('research')}
               className="group relative inline-flex h-[67px] min-w-[227px] items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(90deg,#42AFE1_0%,#3C36B9_100%)] p-px shadow-[0_8px_18px_rgba(47,95,190,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(47,95,190,0.28)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rio-primary"
             >
               <span className="absolute inset-0 -translate-x-full bg-[linear-gradient(115deg,transparent_25%,rgba(255,255,255,0.45)_50%,transparent_75%)] transition-transform duration-500 group-hover:translate-x-full" />
               <span className="relative z-10 flex h-full w-full items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#2F5FBE] transition-colors duration-300 group-hover:bg-[#F7FBFF]">
-                {isEnglish ? 'Chat with Rio 3' : 'Converse com o Rio 3'}
+                {isEnglish ? 'See our research' : 'Veja nossa pesquisa'}
               </span>
             </button>
           </div>
