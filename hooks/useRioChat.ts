@@ -125,6 +125,8 @@ export function useRioChat(options: UseRioChatOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(isLoading);
   isLoadingRef.current = isLoading;
+  const errorMessageRef = useRef(errorMessage);
+  errorMessageRef.current = errorMessage;
 
   // AbortController for canceling requests
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -295,7 +297,12 @@ export function useRioChat(options: UseRioChatOptions = {}) {
         console.error('Failed to fetch from Rio API', error);
         setTree((prevTree) => {
           const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
-          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userParentId);
+          const { newTree, newNodeId } = addNode(
+            prevTree,
+            'assistant',
+            errorMessageRef.current,
+            userParentId
+          );
           return {
             ...newTree,
             selectedPath: [...prevTree.selectedPath, newNodeId],
@@ -404,7 +411,12 @@ export function useRioChat(options: UseRioChatOptions = {}) {
         console.error('Failed to fetch from Rio API', error);
         setTree((prevTree) => {
           const userNodeId: string | null = pathToUser[pathToUser.length - 1] ?? null;
-          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userNodeId);
+          const { newTree, newNodeId } = addNode(
+            prevTree,
+            'assistant',
+            errorMessageRef.current,
+            userNodeId
+          );
           return {
             ...newTree,
             selectedPath: [...pathToUser, newNodeId],
@@ -523,7 +535,12 @@ export function useRioChat(options: UseRioChatOptions = {}) {
         console.error('Failed to fetch from Rio API', error);
         setTree((prevTree) => {
           const userParentId: string | null = prevTree.selectedPath[prevTree.selectedPath.length - 1] ?? null;
-          const { newTree, newNodeId } = addNode(prevTree, 'assistant', errorMessage, userParentId);
+          const { newTree, newNodeId } = addNode(
+            prevTree,
+            'assistant',
+            errorMessageRef.current,
+            userParentId
+          );
           return {
             ...newTree,
             selectedPath: [...prevTree.selectedPath, newNodeId],

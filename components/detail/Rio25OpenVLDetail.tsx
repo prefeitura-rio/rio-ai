@@ -604,18 +604,7 @@ export const Rio25OpenVLDetail: React.FC<Rio25OpenVLDetailProps> = ({ model, onB
               )}
             </div>
 
-            <AnimateOnScroll>
-              <OnPolicyDistillationFlow
-                teacherName="Rio 2.5 Omni"
-                studentName="Qwen 3 VL 4b"
-                finalModelName={model.name}
-              />
-            </AnimateOnScroll>
-
             <div className="relative rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-rio-primary/10 blur-2xl" />
-              </div>
               <div className="relative flex h-full flex-col gap-6">
                 <ParameterComparisonChart
                   label={isEnglish ? 'Performance on Visual Benchmarks' : 'Desempenho em Benchmarks Visuais'}
@@ -688,6 +677,14 @@ export const Rio25OpenVLDetail: React.FC<Rio25OpenVLDetailProps> = ({ model, onB
             {model.useCases && <DetailUseCases useCases={model.useCases} />}
             {model.codeSnippets && <DetailCodeSnippets snippets={model.codeSnippets} />}
           </section>
+        </AnimateOnScroll>
+
+        <AnimateOnScroll>
+          <OnPolicyDistillationFlow
+            teacherName="Rio 2.5 Omni"
+            studentName="Qwen 3 VL 4b"
+            finalModelName={model.name}
+          />
         </AnimateOnScroll>
       </div>
     </div>

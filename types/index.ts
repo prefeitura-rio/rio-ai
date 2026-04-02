@@ -3,7 +3,7 @@
  * Consolidated from types.ts and various component files.
  */
 
-import type { LucideIcon } from 'lucide-react';
+import type { ElementType, SVGProps } from 'react';
 
 // ============================================================================
 // Navigation Types
@@ -13,7 +13,9 @@ import type { LucideIcon } from 'lucide-react';
  * Application view/route type.
  * Previously duplicated in App.tsx, Header.tsx, and Hero.tsx.
  */
-export type View = 'home' | 'chat' | 'opensource';
+export type View = 'home' | 'chat' | 'opensource' | 'research' | 'contact';
+
+export type IconComponent = ElementType<SVGProps<SVGSVGElement>>;
 
 // ============================================================================
 // Model Types
@@ -22,13 +24,13 @@ export type View = 'home' | 'chat' | 'opensource';
 export interface UseCase {
   title: string;
   description: string;
-  Icon: LucideIcon;
+  Icon: IconComponent;
 }
 
 export interface CodeSnippet {
   lang: string;
   code: string;
-  Icon: LucideIcon;
+  Icon: IconComponent;
 }
 
 export interface DatasetLink {
@@ -40,7 +42,7 @@ export interface Model {
   name: string;
   description: string;
   category: string;
-  Icon: LucideIcon;
+  Icon: IconComponent;
   tags: string[];
   isOpenSource?: boolean;
   supportsChat?: boolean;
@@ -97,3 +99,16 @@ export interface MessageTree {
   selectedPath: string[];
 }
 
+// ============================================================================
+// Research Types
+// ============================================================================
+
+export interface ResearchPost {
+  id: string;
+  title: string;
+  summary: string;
+  content?: string;
+  date: string;
+  imageUrl: string;
+  isFeatured?: boolean;
+}

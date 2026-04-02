@@ -2,10 +2,14 @@ import { useMemo, useState } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { OpenSourceSection } from './components/OpenSourceSection';
+import { ResearchSection, getResearchPosts } from './components/ResearchSection';
+import { ResearchDetailView } from './components/ResearchDetailView';
+import { ContactSection } from './components/ContactSection';
 import { ModelDetailView } from './components/ModelDetailView';
-import { ErrorBoundary, ChatErrorBoundary, SectionErrorBoundary } from './components/ErrorBoundary';
-import { ChatSection } from './components/ChatSection';
-import type { Model, View } from './types/index';
+import { ErrorBoundary, SectionErrorBoundary } from './components/ErrorBoundary';
+// import { ChatErrorBoundary } from './components/ErrorBoundary';
+// import { ChatSection } from './components/ChatSection';
+import type { Model, ResearchPost, View } from './types/index';
 import { getRioModels } from './constants';
 import { LocaleProvider, useLocale } from './contexts/LocaleContext';
 
@@ -41,13 +45,20 @@ const FloatingLanguageToggle = () => {
 const AppContent = () => {
   const { locale } = useLocale();
   const models = useMemo(() => getRioModels(locale), [locale]);
+  const researchPosts = useMemo(() => getResearchPosts(locale), [locale]);
   const [selectedModelName, setSelectedModelName] = useState<string | null>(null);
+  const [selectedResearchPostId, setSelectedResearchPostId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<View>('home');
 
   const selectedModel = useMemo<Model | null>(() => {
     if (!selectedModelName) return null;
     return models.find((model) => model.name === selectedModelName) ?? null;
   }, [models, selectedModelName]);
+
+  const selectedResearchPost = useMemo<ResearchPost | null>(() => {
+    if (!selectedResearchPostId) return null;
+    return researchPosts.find((post) => post.id === selectedResearchPostId) ?? null;
+  }, [researchPosts, selectedResearchPostId]);
 
   const handleSelectModel = (model: Model) => {
     setSelectedModelName(model.name);
@@ -56,22 +67,32 @@ const AppContent = () => {
 
   const handleBack = () => {
     setSelectedModelName(null);
+    setSelectedResearchPostId(null);
+  };
+
+  const handleSelectPost = (post: ResearchPost) => {
+    setSelectedResearchPostId(post.id);
+    window.scrollTo(0, 0);
   };
 
   const handleNavigate = (view: View) => {
-    setCurrentView(view);
+    // Temporarily keep chat inaccessible until outstanding issues are resolved.
+    setCurrentView(view === 'chat' ? 'home' : view);
     setSelectedModelName(null);
+    setSelectedResearchPostId(null);
     window.scrollTo(0, 0);
   };
 
   const renderView = () => {
     switch (currentView) {
       case 'chat':
-        return (
-          <ChatErrorBoundary>
-            <ChatSection />
-          </ChatErrorBoundary>
-        );
+        // Chat temporarily disabled. Keep implementation commented for easy restore.
+        // return (
+        //   <ChatErrorBoundary>
+        //     <ChatSection />
+        //   </ChatErrorBoundary>
+        // );
+        return <Hero onNavigate={handleNavigate} />;
       case 'opensource': {
         const openSourceModels = models.filter(
           (m) => m.isOpenSource && m.name.includes('Open'),
@@ -82,6 +103,14 @@ const AppContent = () => {
           </SectionErrorBoundary>
         ) : null;
       }
+      case 'research':
+        return (
+          <SectionErrorBoundary sectionName="Research">
+            <ResearchSection onSelectPost={handleSelectPost} />
+          </SectionErrorBoundary>
+        );
+      case 'contact':
+        return <ContactSection />;
       case 'home':
       default:
         return (
@@ -100,6 +129,14 @@ const AppContent = () => {
           {selectedModel ? (
             <ErrorBoundary name="ModelDetail">
               <ModelDetailView model={selectedModel} onBack={handleBack} />
+            </ErrorBoundary>
+          ) : selectedResearchPost ? (
+            <ErrorBoundary name="ResearchDetail">
+              <ResearchDetailView
+                post={selectedResearchPost}
+                onBack={handleBack}
+                onSelectModel={handleSelectModel}
+              />
             </ErrorBoundary>
           ) : (
             renderView()

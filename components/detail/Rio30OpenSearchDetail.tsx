@@ -572,20 +572,9 @@ export const Rio30OpenSearchDetail: React.FC<Rio30OpenSearchDetailProps> = ({
       </AnimateOnScroll>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
-        <AnimateOnScroll>
-          <OnPolicyDistillationFlow
-            teacherName="Rio 3.0 Preview"
-            studentName="Qwen 3 235B 2507"
-            finalModelName={model.name}
-          />
-        </AnimateOnScroll>
-
         {AVERAGE_SIZE_DATA.length > 0 && (
           <AnimateOnScroll>
             <section className="relative rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-rio-primary/10 blur-2xl" />
-              </div>
               <div className="relative flex h-full flex-col gap-6">
                 <AverageSizeComparisonChart
                   label={isEnglish ? 'Performance on Search Benchmarks' : 'Desempenho em Benchmarks de Busca'}
@@ -676,6 +665,14 @@ export const Rio30OpenSearchDetail: React.FC<Rio30OpenSearchDetailProps> = ({
             {model.useCases && <DetailUseCases useCases={model.useCases} />}
             {model.codeSnippets && <DetailCodeSnippets snippets={model.codeSnippets} />}
           </section>
+        </AnimateOnScroll>
+
+        <AnimateOnScroll>
+          <OnPolicyDistillationFlow
+            teacherName="Rio 3.0 Preview"
+            studentName="Qwen 3 235B 2507"
+            finalModelName={model.name}
+          />
         </AnimateOnScroll>
       </div>
     </div>

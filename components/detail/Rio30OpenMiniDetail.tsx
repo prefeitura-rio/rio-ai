@@ -142,18 +142,7 @@ export const Rio30OpenMiniDetail: React.FC<Rio30OpenMiniDetailProps> = ({ model,
               )}
             </div>
 
-            <AnimateOnScroll>
-              <OnPolicyDistillationFlow
-                teacherName="Rio 3.0 Preview"
-                studentName={model.baseModel ?? 'Qwen 3 4B 2507'}
-                finalModelName={model.name}
-              />
-            </AnimateOnScroll>
-
             <div className="relative rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-rio-primary/10 blur-2xl" />
-              </div>
               <div className="relative flex h-full flex-col gap-6">
                 <ParameterBenchmarkComparisonChart
                   label={isEnglish ? 'Performance on Math Benchmarks' : 'Desempenho em Benchmarks Matemáticos'}
@@ -166,9 +155,6 @@ export const Rio30OpenMiniDetail: React.FC<Rio30OpenMiniDetailProps> = ({ model,
             </div>
 
             <div className="relative rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-rio-primary/10 blur-2xl" />
-              </div>
               <div className="relative flex h-full flex-col gap-6">
                 <div className="grid gap-4 lg:grid-cols-2">
                   {METRIC_CONFIGS.map((config) => (
@@ -197,6 +183,14 @@ export const Rio30OpenMiniDetail: React.FC<Rio30OpenMiniDetailProps> = ({ model,
             {model.useCases && <DetailUseCases useCases={model.useCases} />}
             {model.codeSnippets && <DetailCodeSnippets snippets={model.codeSnippets} />}
           </section>
+        </AnimateOnScroll>
+
+        <AnimateOnScroll>
+          <OnPolicyDistillationFlow
+            teacherName="Rio 3.0 Preview"
+            studentName={model.baseModel ?? 'Qwen 3 4B 2507'}
+            finalModelName={model.name}
+          />
         </AnimateOnScroll>
       </div>
     </div>

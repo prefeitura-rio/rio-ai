@@ -160,7 +160,7 @@ const RIO_MODELS_EN: Record<
 > = {
   'Rio 3.0 Open': {
     description:
-      'Our flagship open-source model,\nwith performance on par with today\'s best open models.',
+      "Our flagship open-source model,\nwith performance on par with today's best open models.",
     tags: ['235B parameters · 22B active', 'MIT License'],
     parameters: '235 Billion (22B active)',
   },
@@ -193,7 +193,7 @@ model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-open")
 -H "Content-Type: application/json" \\
 -d '{
   "model": "rio-2.5-open",
-  "messages": [{"role": "user", "content": "What\'s new in Rio 2.5?"}]
+  "messages": [{"role": "user", "content": "What's new in Rio 2.5?"}]
 }'`,
     },
   },
@@ -204,7 +204,7 @@ model = AutoModelForCausalLM.from_pretrained("IPLANRIO/rio-2.5-open")
   },
   'Rio 3.0 Open Search': {
     description:
-      'The world\'s most advanced web search model.',
+      "The world's most advanced web search model.",
     tags: ['235B parameters · 22B active', 'MIT License'],
   },
 };

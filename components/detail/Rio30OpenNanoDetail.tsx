@@ -36,14 +36,6 @@ export const Rio30OpenNanoDetail: React.FC<Rio30OpenNanoDetailProps> = ({ model,
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
         <AnimateOnScroll>
-          <OnPolicyDistillationFlow
-            teacherName="Rio 3.0 Preview"
-            studentName={model.baseModel ?? 'Qwen 3 1.7B'}
-            finalModelName={model.name}
-          />
-        </AnimateOnScroll>
-
-        <AnimateOnScroll>
           <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-10 shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">
@@ -79,6 +71,14 @@ export const Rio30OpenNanoDetail: React.FC<Rio30OpenNanoDetailProps> = ({ model,
             {model.useCases && <DetailUseCases useCases={model.useCases} />}
             {model.codeSnippets && <DetailCodeSnippets snippets={model.codeSnippets} />}
           </section>
+        </AnimateOnScroll>
+
+        <AnimateOnScroll>
+          <OnPolicyDistillationFlow
+            teacherName="Rio 3.0 Preview"
+            studentName={model.baseModel ?? 'Qwen 3 1.7B'}
+            finalModelName={model.name}
+          />
         </AnimateOnScroll>
       </div>
     </div>

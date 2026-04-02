@@ -877,7 +877,7 @@ export const ChatSection = () => {
     const wrapperClass =
       variant === 'intro'
         ? 'rounded-2xl bg-white p-3'
-        : 'bg-white/95 px-4 py-4 sm:px-6';
+        : 'shrink-0 bg-white/95 px-4 py-4 sm:px-6';
     const formClass =
       variant === 'intro'
         ? 'group relative flex items-center gap-2 rounded-2xl border border-rio-primary bg-white p-1.5 pl-2 shadow-sm transition-all duration-300 focus-within:border-rio-primary focus-within:ring-4 focus-within:ring-rio-primary/10'
@@ -1093,8 +1093,11 @@ export const ChatSection = () => {
   };
 
   return (
-    <section id="chat" className={`bg-white ${isEmptyChat ? 'py-20 sm:py-24' : 'py-0'}`}>
-      <div className={isEmptyChat ? 'container mx-auto px-4 sm:px-6 lg:px-8' : 'w-full'}>
+    <section
+      id="chat"
+      className={`bg-white ${isEmptyChat ? 'py-20 sm:py-24' : 'h-[calc(100svh-5rem)] overflow-hidden py-0'}`}
+    >
+      <div className={isEmptyChat ? 'container mx-auto px-4 sm:px-6 lg:px-8' : 'h-full w-full'}>
         {isEmptyChat ? (
           <AnimateOnScroll className="max-w-3xl mx-auto">
             <div className="mx-auto flex min-h-[60vh] w-full max-w-2xl flex-col items-center justify-center">
@@ -1122,10 +1125,10 @@ export const ChatSection = () => {
             </div>
           </AnimateOnScroll>
         ) : (
-          <div className="mx-auto flex min-h-[calc(100svh-5rem)] w-full flex-col">
+          <div className="mx-auto flex h-full min-h-0 w-full flex-col">
             <div
               ref={chatContainerRef}
-              className={`flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out chat-scroll-container ${showScrollbar ? 'show-scrollbar' : ''} ${isClearing ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'
+              className={`min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out chat-scroll-container ${showScrollbar ? 'show-scrollbar' : ''} ${isClearing ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'
                 }`}
             >
               <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
