@@ -1,4 +1,89 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources:
-  - resources.yaml
+
+namespace: rio-ai
+
+helmCharts:
+  - name: base-chart
+    repo: https://prefeitura-rio.github.io/charts
+    version: 2.3.0
+    releaseName: rio-ai
+    valuesInline:
+      replicaCount: 2
+
+      image:
+        repository: ghcr.io/prefeitura-rio/rio-ai
+        pullPolicy: IfNotPresent
+        tag: "stable"
+
+      imagePullSecrets:
+        - name: ghcr-credentials
+
+      service:
+        type: ClusterIP
+        port: 80
+        containerPort: 3001
+
+      env:
+        - name: NODE_ENV
+          value: "production"
+
+      istio:
+        enabled: true
+
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+
+      livenessProbe:
+        tcpSocket:
+          port: 3001
+        initialDelaySeconds: 0
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 6
+
+      readinessProbe:
+        tcpSocket:
+          port: 3001
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 3
+
+      infisicalSecret:
+        enabled: true
+        secretName: "rio-ai-secrets"
+        projectSlug: "rio-ia-bwy-w"
+        envSlug: "prod"
+
+      envFrom:
+        - secretRef:
+            name: rio-ai-secrets
+
+      podAnnotations:
+        secrets.infisical.com/auto-reload: "true"
+
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: false
+
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 2
+
+      autoscaling:
+        enabled: false
